@@ -1,0 +1,100 @@
+@model Firmeza.Domain.Entities.Customer
+
+@{
+    ViewData["Title"] = "Crear Cliente";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Nuevo Cliente</h1>
+    <a asp-action="Index" class="btn btn-sm btn-secondary shadow-sm">
+        <i class="fas fa-arrow-left fa-sm text-white-50"></i> Volver al listado
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-xl-8 col-lg-10">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Información Personal</h6>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="FirstName" class="form-label">Nombres</label>
+                            <input asp-for="FirstName" class="form-control" placeholder="Ej: Juan Carlos" />
+                            <span asp-validation-for="FirstName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="LastName" class="form-label">Apellidos</label>
+                            <input asp-for="LastName" class="form-control" placeholder="Ej: Pérez López" />
+                            <span asp-validation-for="LastName" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="DocumentType" class="form-label">Tipo Documento</label>
+                            <select asp-for="DocumentType" class="form-select">
+                                <option value="CC">Cédula de Ciudadanía</option>
+                                <option value="NIT">NIT</option>
+                                <option value="CE">Cédula de Extranjería</option>
+                                <option value="PAS">Pasaporte</option>
+                            </select>
+                            <span asp-validation-for="DocumentType" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-8 mb-3">
+                            <label asp-for="DocumentNumber" class="form-label">Número de Documento</label>
+                            <input asp-for="DocumentNumber" class="form-control" placeholder="Ej: 1234567890" />
+                            <span asp-validation-for="DocumentNumber" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Email" class="form-label">Correo Electrónico</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                <input asp-for="Email" class="form-control" type="email" placeholder="cliente@ejemplo.com" />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Phone" class="form-label">Teléfono / Celular</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                <input asp-for="Phone" class="form-control" placeholder="Ej: 300 123 4567" />
+                            </div>
+                            <span asp-validation-for="Phone" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label asp-for="Address" class="form-label">Dirección</label>
+                            <input asp-for="Address" class="form-control" placeholder="Ej: Calle 123 # 45-67" />
+                            <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="City" class="form-label">Ciudad</label>
+                            <input asp-for="City" class="form-control" placeholder="Ej: Bogotá" />
+                            <span asp-validation-for="City" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-save me-2"></i> Registrar Cliente
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

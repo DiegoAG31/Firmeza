@@ -1,0 +1,94 @@
+@model Firmeza.Domain.Entities.Sale
+
+@{
+    ViewData["Title"] = "Detalle de Venta";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Venta #@Model.SaleNumber</h1>
+    <div>
+        <a asp-action="Index" class="btn btn-sm btn-secondary shadow-sm me-2">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Volver
+        </a>
+        @if (!string.IsNullOrEmpty(Model.PdfPath))
+        {
+            <a asp-action="DownloadPdf" asp-route-id="@Model.Id" class="btn btn-sm btn-danger shadow-sm">
+                <i class="fas fa-file-pdf fa-sm text-white-50"></i> Descargar Recibo
+            </a>
+        }
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Información General</h6>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Fecha:</dt>
+                    <dd class="col-sm-8">@Model.SaleDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+
+                    <dt class="col-sm-4">Cliente:</dt>
+                    <dd class="col-sm-8">@Model.Customer?.FullName</dd>
+
+                    <dt class="col-sm-4">Doc:</dt>
+                    <dd class="col-sm-8">@Model.Customer?.DocumentNumber</dd>
+
+                    <dt class="col-sm-4">Estado:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-success">Completada</span>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Productos Vendidos</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-end">Precio Unit.</th>
+                                <th class="text-center">Cant.</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.SaleDetails)
+                            {
+                                <tr>
+                                    <td>@item.Product?.Name</td>
+                                    <td class="text-end">@item.UnitPrice.ToString("C0")</td>
+                                    <td class="text-center">@item.Quantity</td>
+                                    <td class="text-end">@item.Subtotal.ToString("C0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">Subtotal:</td>
+                                <td class="text-end">@Model.Subtotal.ToString("C0")</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">IVA (19%):</td>
+                                <td class="text-end">@Model.Tax.ToString("C0")</td>
+                            </tr>
+                            <tr class="table-active">
+                                <td colspan="3" class="text-end fw-bold h5 mb-0">TOTAL:</td>
+                                <td class="text-end fw-bold h5 mb-0 text-success">@Model.Total.ToString("C0")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

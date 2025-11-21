@@ -1,0 +1,226 @@
+@model Firmeza.Web.Mvc.Models.CreateSaleViewModel
+@using Firmeza.Domain.Entities
+
+@{
+    ViewData["Title"] = "Nueva Venta";
+    var products = ViewBag.Products as List<Product>;
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Registrar Venta</h1>
+    <a asp-action="Index" class="btn btn-sm btn-secondary shadow-sm">
+        <i class="fas fa-arrow-left fa-sm text-white-50"></i> Cancelar
+    </a>
+</div>
+
+<form asp-action="Create" id="saleForm">
+    <div class="row">
+        <!-- Customer Info -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Datos del Cliente</h6>
+                </div>
+                <div class="card-body">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="CustomerId" class="form-label">Seleccionar Cliente</label>
+                        <select asp-for="CustomerId" class="form-select" asp-items="ViewBag.CustomerId">
+                            <option value="">-- Buscar Cliente --</option>
+                        </select>
+                        <span asp-validation-for="CustomerId" class="text-danger small"></span>
+                    </div>
+                    
+                    <div class="alert alert-info small">
+                        <i class="fas fa-info-circle me-1"></i> 
+                        Si el cliente no existe, debe crearlo primero en el módulo de Clientes.
+                    </div>
+                    <a asp-controller="Customers" asp-action="Create" target="_blank" class="btn btn-sm btn-outline-primary w-100">
+                        <i class="fas fa-user-plus me-1"></i> Crear Nuevo Cliente
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">Resumen</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span class="fw-bold" id="summarySubtotal">$0</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>IVA (19%):</span>
+                        <span class="fw-bold" id="summaryTax">$0</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between h4 text-success">
+                        <span>Total:</span>
+                        <span class="fw-bold" id="summaryTotal">$0</span>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success btn-lg w-100 mt-3">
+                        <i class="fas fa-check-circle me-2"></i> Finalizar Venta
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Cart -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Detalle de Productos</h6>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="addProductRow()">
+                        <i class="fas fa-plus me-1"></i> Agregar Producto
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="detailsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 40%">Producto</th>
+                                    <th style="width: 15%">Precio</th>
+                                    <th style="width: 15%">Stock</th>
+                                    <th style="width: 15%">Cantidad</th>
+                                    <th style="width: 15%">Subtotal</th>
+                                    <th style="width: 5%"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="detailsBody">
+                                <!-- Rows will be added here via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="emptyMessage" class="text-center text-muted py-4">
+                        <i class="fas fa-shopping-basket fa-3x mb-3 opacity-25"></i>
+                        <p>No hay productos agregados a la venta.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Hidden template for product options -->
+<select id="productOptionsTemplate" style="display:none">
+    <option value="">-- Seleccionar --</option>
+    @if (products != null)
+    {
+        foreach (var p in products)
+        {
+            <option value="@p.Id" data-price="@p.Price" data-stock="@p.Stock">@p.Name</option>
+        }
+    }
+</select>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        let rowIndex = 0;
+
+        function addProductRow() {
+            const tbody = document.getElementById('detailsBody');
+            const emptyMsg = document.getElementById('emptyMessage');
+            const options = document.getElementById('productOptionsTemplate').innerHTML;
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <select name="Details[${rowIndex}].ProductId" class="form-select form-select-sm product-select" onchange="updateRow(this)" required>
+                        ${options}
+                    </select>
+                </td>
+                <td class="text-end price-cell">$0</td>
+                <td class="text-center stock-cell">-</td>
+                <td>
+                    <input type="number" name="Details[${rowIndex}].Quantity" class="form-control form-control-sm qty-input" min="1" value="1" onchange="updateRow(this)" required disabled>
+                </td>
+                <td class="text-end subtotal-cell fw-bold">$0</td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+            emptyMsg.style.display = 'none';
+            rowIndex++;
+        }
+
+        function removeRow(btn) {
+            const row = btn.closest('tr');
+            row.remove();
+            calculateTotals();
+            
+            if (document.getElementById('detailsBody').children.length === 0) {
+                document.getElementById('emptyMessage').style.display = 'block';
+            }
+        }
+
+        function updateRow(element) {
+            const row = element.closest('tr');
+            const select = row.querySelector('.product-select');
+            const qtyInput = row.querySelector('.qty-input');
+            const priceCell = row.querySelector('.price-cell');
+            const stockCell = row.querySelector('.stock-cell');
+            const subtotalCell = row.querySelector('.subtotal-cell');
+            
+            const option = select.options[select.selectedIndex];
+            
+            if (option.value) {
+                const price = parseFloat(option.dataset.price);
+                const stock = parseInt(option.dataset.stock);
+                
+                qtyInput.disabled = false;
+                qtyInput.max = stock;
+                
+                priceCell.innerText = formatCurrency(price);
+                stockCell.innerText = stock;
+                
+                let qty = parseInt(qtyInput.value) || 0;
+                if (qty > stock) {
+                    qty = stock;
+                    qtyInput.value = stock;
+                    alert('La cantidad no puede superar el stock disponible (' + stock + ')');
+                }
+                
+                const subtotal = price * qty;
+                subtotalCell.innerText = formatCurrency(subtotal);
+                subtotalCell.dataset.value = subtotal;
+            } else {
+                qtyInput.disabled = true;
+                qtyInput.value = 1;
+                priceCell.innerText = '$0';
+                stockCell.innerText = '-';
+                subtotalCell.innerText = '$0';
+                subtotalCell.dataset.value = 0;
+            }
+            
+            calculateTotals();
+        }
+
+        function calculateTotals() {
+            let subtotal = 0;
+            document.querySelectorAll('.subtotal-cell').forEach(cell => {
+                subtotal += parseFloat(cell.dataset.value || 0);
+            });
+            
+            const tax = subtotal * 0.19;
+            const total = subtotal + tax;
+            
+            document.getElementById('summarySubtotal').innerText = formatCurrency(subtotal);
+            document.getElementById('summaryTax').innerText = formatCurrency(tax);
+            document.getElementById('summaryTotal').innerText = formatCurrency(total);
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
+        }
+    </script>
+}
