@@ -1,0 +1,77 @@
+@{
+    ViewData["Title"] = "Importación Masiva";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title mb-0"><i class="bi bi-file-earmark-spreadsheet"></i> Importación Masiva de Datos</h3>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">
+                Sube un archivo Excel (.xlsx) con datos de productos, clientes y ventas. 
+                El sistema normalizará y procesará la información automáticamente.
+            </p>
+
+            @if (ViewBag.SuccessMessage != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill"></i> @ViewBag.SuccessMessage
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (ViewBag.ErrorMessage != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill"></i> @ViewBag.ErrorMessage
+                    @if (ViewBag.Errors != null)
+                    {
+                        <ul class="mt-2 mb-0">
+                            @foreach (var error in ViewBag.Errors)
+                            {
+                                <li>@error</li>
+                            }
+                        </ul>
+                    }
+                    @if (ViewBag.ErrorDetails != null)
+                    {
+                        <details class="mt-2">
+                            <summary>Detalles técnicos</summary>
+                            <pre class="mt-2 small">@ViewBag.ErrorDetails</pre>
+                        </details>
+                    }
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-circle-fill"></i> <strong>Errores de validación:</strong>
+                    <ul class="mt-2 mb-0">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <li>@error.ErrorMessage</li>
+                        }
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <form asp-action="Upload" asp-controller="Import" method="post" enctype="multipart/form-data" class="mt-4">
+                <div class="mb-3">
+                    <label for="file" class="form-label fw-bold">Seleccionar Archivo Excel</label>
+                    <input type="file" class="form-control" name="file" id="file" accept=".xlsx" required>
+                    <div class="form-text">Asegúrate de que el archivo tenga las columnas requeridas (Código, Producto, Cliente, etc.)</div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-cloud-upload"></i> Subir y Procesar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

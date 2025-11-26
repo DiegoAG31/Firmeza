@@ -2,6 +2,8 @@ using Firmeza.Infrastructure.Data;
 using Firmeza.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Firmeza.Application.Interfaces;
+using Firmeza.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +51,7 @@ builder.Services.AddScoped<DbSeeder>();
 
 // Register Services
 builder.Services.AddScoped<Firmeza.Application.Interfaces.IPdfService, Firmeza.Infrastructure.Services.PdfService>();
+builder.Services.AddScoped<IExcelImportService, ExcelImportService>();
 
 var app = builder.Build();
 
