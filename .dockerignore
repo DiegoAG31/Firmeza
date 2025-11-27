@@ -1,0 +1,56 @@
+# .NET
+**/bin/
+**/obj/
+**/out/
+**/*.user
+**/*.suo
+**/*.cache
+**/.vs/
+
+# Node
+**/node_modules/
+**/.next/
+**/out/
+**/.cache/
+**/.vercel/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+**/.dockerignore
+**/Dockerfile*
+**/docker-compose*
+
+# Tests
+**/tests/
+**/*.Tests/
+
+# Documentation
+**/*.md
+!README.md
+
+# IDE
+**/.vscode/
+**/.idea/
+**/*.swp
+**/*.swo
+
+# OS
+**/.DS_Store
+**/Thumbs.db
+
+# Logs
+**/logs/
+**/*.log
+
+# Environment
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Build artifacts
+**/wwwroot/recibos/
+**/datos_importacion_ejemplo.xlsx

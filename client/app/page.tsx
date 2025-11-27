@@ -17,7 +17,8 @@ export default function Home() {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        fetch('http://localhost:5242/api/Products')
+        // Use relative URL so Next.js rewrites handle the proxy
+        fetch('/api/Products')
             .then(res => res.json())
             .then(data => {
                 setProducts(data)

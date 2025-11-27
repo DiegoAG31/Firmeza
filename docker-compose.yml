@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: firmeza-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-FirmezaDB}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Qwe.123*}
+    ports:
+      - "5433:5432" # Changed to 5433 to avoid conflict with local PostgreSQL
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - firmeza-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Web MVC Application
+  web-mvc:
+    build:
+      context: .
+      dockerfile: src/Presentation/Firmeza.Web.Mvc/Dockerfile
+    container_name: firmeza-web-mvc
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB:-FirmezaDB};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-Qwe.123*}
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - firmeza-network
+    restart: unless-stopped
+
+  # Web API Application
+  web-api:
+    build:
+      context: .
+      dockerfile: src/Presentation/Firmeza.Web.Api/Dockerfile
+    container_name: firmeza-web-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB:-FirmezaDB};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-Qwe.123*}
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY:-Firmeza_Secret_Key_For_Development_Only_Change_In_Prod_12345!}
+      - JwtSettings__Issuer=FirmezaApi
+      - JwtSettings__Audience=FirmezaClient
+      - JwtSettings__DurationInMinutes=60
+    ports:
+      - "5001:5001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - firmeza-network
+    restart: unless-stopped
+
+  # Next.js Client Application
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    container_name: firmeza-client
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://web-api:5001
+    ports:
+      - "3000:3000"
+    depends_on:
+      - web-api
+    networks:
+      - firmeza-network
+    restart: unless-stopped
+
+networks:
+  firmeza-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
