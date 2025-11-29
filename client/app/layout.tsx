@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import Navbar from '../components/Navbar'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -17,19 +18,10 @@ export default function RootLayout({
     return (
         <html lang="es">
             <body className={inter.className}>
-                <nav className="bg-secondary text-white shadow-lg">
-                    <div className="container mx-auto px-4 py-4">
-                        <div className="flex justify-between items-center">
-                            <a href="/" className="text-2xl font-bold text-primary">
-                                🏗️ FIRMEZA
-                            </a>
-                            <div className="flex gap-4">
-                                <a href="/" className="hover:text-primary transition">Productos</a>
-                                <a href="/cart" className="hover:text-primary transition">Carrito</a>
-                                <a href="/login" className="hover:text-primary transition">Ingresar</a>
-                            </div>
-                        </div>
-                    </div>
+                <Navbar />
+                <nav className="hidden">
+                    {/* Fallback for SEO or non-JS */}
+                    <a href="/">Home</a>
                 </nav>
                 <main className="min-h-screen">
                     {children}

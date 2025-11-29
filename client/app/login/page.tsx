@@ -36,11 +36,24 @@ export default function LoginPage() {
                 const data = await res.json()
                 localStorage.setItem('token', data.token)
                 localStorage.setItem('user', JSON.stringify(data))
+
+                // Notify Navbar about auth change
+                window.dispatchEvent(new Event('auth-change'))
+
                 alert(isLogin ? 'Sesión iniciada' : 'Registro exitoso')
                 router.push('/')
             } else {
                 const error = await res.json()
-                alert(error.message || 'Error en la operación')
+                console.error('Error registro:', error)
+
+                let errorMessage = error.message || 'Error en la operación'
+
+                // Si hay errores de validación de Identity
+                if (error.errors && Array.isArray(error.errors)) {
+                    errorMessage += ':\n' + error.errors.map((e: any) => `• ${e.description || e.code}`).join('\n')
+                }
+
+                alert(errorMessage)
             }
         } catch (err) {
             alert('Error de conexión')

@@ -57,6 +57,11 @@ export default function CartPage() {
             quantity: item.quantity
         }))
 
+        console.log('Enviando compra:', {
+            customerId: user.customerId,
+            details: items
+        })
+
         try {
             const res = await fetch('http://localhost:5242/api/Sales', {
                 method: 'POST',
@@ -65,14 +70,14 @@ export default function CartPage() {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    customerId: user.customerId || 1, // Ajustar según tu estructura
-                    items
+                    customerId: user.customerId,
+                    details: items // Backend expects "Details", not "items"
                 })
             })
 
             if (res.ok) {
                 const data = await res.json()
-                alert(`Compra exitosa! Número de venta: ${data.saleNumber}`)
+                alert(`✅ ¡Compra exitosa!\n\nNúmero de venta: ${data.saleNumber}\n\n📧 Se ha enviado un comprobante a tu correo electrónico con el detalle de tu compra.`)
                 localStorage.removeItem('cart')
                 setCart([])
                 router.push('/')
@@ -117,14 +122,14 @@ export default function CartPage() {
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => updateQuantity(item.id, -1)}
-                                    className="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300"
+                                    className="bg-gray-300 text-black border border-gray-400 px-3 py-1 rounded hover:bg-gray-400 font-bold"
                                 >
                                     -
                                 </button>
-                                <span className="px-4">{item.quantity}</span>
+                                <span className="px-4 font-medium text-black">{item.quantity}</span>
                                 <button
                                     onClick={() => updateQuantity(item.id, 1)}
-                                    className="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300"
+                                    className="bg-gray-300 text-black border border-gray-400 px-3 py-1 rounded hover:bg-gray-400 font-bold"
                                 >
                                     +
                                 </button>

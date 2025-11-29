@@ -1,3 +1,4 @@
+using AutoMapper;
 using Firmeza.Application.DTOs;
 using Firmeza.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
@@ -11,10 +12,12 @@ namespace Firmeza.Web.Api.Controllers;
 public class ProductsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private readonly IMapper _mapper;
 
-    public ProductsController(ApplicationDbContext context)
+    public ProductsController(ApplicationDbContext context, IMapper mapper)
     {
         _context = context;
+        _mapper = mapper;
     }
 
     /// <summary>
@@ -26,23 +29,10 @@ public class ProductsController : ControllerBase
         var products = await _context.Products
             .Include(p => p.Category)
             .Where(p => p.IsActive && p.Stock > 0)
-            .Select(p => new ProductDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                Code = p.Code,
-                Price = p.Price,
-                Stock = p.Stock,
-                Type = p.Type,
-                ImageUrl = p.ImageUrl,
-                CategoryId = p.CategoryId ?? 0,
-                CategoryName = p.Category!.Name,
-                IsActive = p.IsActive
-            })
             .ToListAsync();
 
-        return Ok(products);
+        var productsDto = _mapper.Map<IEnumerable<ProductDto>>(products);
+        return Ok(productsDto);
     }
 
     /// <summary>
@@ -54,26 +44,13 @@ public class ProductsController : ControllerBase
         var product = await _context.Products
             .Include(p => p.Category)
             .Where(p => p.Id == id && p.IsActive)
-            .Select(p => new ProductDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                Code = p.Code,
-                Price = p.Price,
-                Stock = p.Stock,
-                Type = p.Type,
-                ImageUrl = p.ImageUrl,
-                CategoryId = p.CategoryId ?? 0,
-                CategoryName = p.Category!.Name,
-                IsActive = p.IsActive
-            })
             .FirstOrDefaultAsync();
 
         if (product == null)
             return NotFound(new { message = "Producto no encontrado" });
 
-        return Ok(product);
+        var productDto = _mapper.Map<ProductDto>(product);
+        return Ok(productDto);
     }
 
     /// <summary>
@@ -85,22 +62,9 @@ public class ProductsController : ControllerBase
         var products = await _context.Products
             .Include(p => p.Category)
             .Where(p => p.CategoryId == categoryId && p.IsActive && p.Stock > 0)
-            .Select(p => new ProductDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                Code = p.Code,
-                Price = p.Price,
-                Stock = p.Stock,
-                Type = p.Type,
-                ImageUrl = p.ImageUrl,
-                CategoryId = p.CategoryId ?? 0,
-                CategoryName = p.Category!.Name,
-                IsActive = p.IsActive
-            })
             .ToListAsync();
 
-        return Ok(products);
+        var productsDto = _mapper.Map<IEnumerable<ProductDto>>(products);
+        return Ok(productsDto);
     }
 }

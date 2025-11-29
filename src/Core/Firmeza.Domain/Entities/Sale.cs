@@ -48,6 +48,11 @@ public class Sale : BaseEntity
     /// </summary>
     public string? PdfPath { get; set; }
 
+    /// <summary>
+    /// Additional notes or observations about the sale
+    /// </summary>
+    public string? Observations { get; set; }
+
     // Navigation properties
     /// <summary>
     /// Customer who made the purchase

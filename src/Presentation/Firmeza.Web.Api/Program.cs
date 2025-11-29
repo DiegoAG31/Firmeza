@@ -15,6 +15,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
+// Configure AutoMapper
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 // Configure Swagger with JWT support
 builder.Services.AddSwaggerGen(c =>
 {
@@ -99,9 +102,14 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Configure Email Settings
+builder.Services.Configure<Firmeza.Application.Settings.EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
+
 // Register Services
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IPdfService, PdfService>();
+builder.Services.AddScoped<Firmeza.Application.Interfaces.IEmailService, Firmeza.Infrastructure.Services.SmtpEmailService>();
 
 var app = builder.Build();
 
@@ -114,11 +122,33 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseStaticFiles(); // Enable serving static files from wwwroot
+
 app.UseCors("AllowNextJs");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Seed database on startup
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var seeder = new Firmeza.Infrastructure.Data.DbSeeder(
+            services.GetRequiredService<UserManager<ApplicationUser>>(),
+            services.GetRequiredService<RoleManager<IdentityRole>>(),
+            services.GetRequiredService<ApplicationDbContext>()
+        );
+        await seeder.SeedAsync();
+        Console.WriteLine("✅ Database seeded successfully");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ Error seeding database: {ex.Message}");
+    }
+}
 
 app.Run();

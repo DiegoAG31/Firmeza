@@ -32,7 +32,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB:-FirmezaDB};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-Qwe.123*}
     ports:
-      - "5000:5000"
+      - "5100:5000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -54,7 +54,7 @@ services:
       - JwtSettings__Audience=FirmezaClient
       - JwtSettings__DurationInMinutes=60
     ports:
-      - "5001:5001"
+      - "5242:5001"
     depends_on:
       postgres:
         condition: service_healthy
@@ -72,7 +72,7 @@ services:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=http://web-api:5001
     ports:
-      - "3000:3000"
+      - "3001:3000"
     depends_on:
       - web-api
     networks:
@@ -81,8 +81,7 @@ services:
 
 networks:
   firmeza-network:
-    driver: bridge
+
 
 volumes:
   postgres_data:
-    driver: local

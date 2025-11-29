@@ -134,6 +134,19 @@ public class ProductsController : Controller
         var product = await _context.Products.FindAsync(id);
         if (product != null)
         {
+            // Check for dependencies in SaleDetails
+            var hasSales = await _context.SaleDetails.AnyAsync(sd => sd.ProductId == id);
+            
+            if (hasSales)
+            {
+                // Soft delete: Mark as inactive
+                product.IsActive = false;
+                product.UpdatedAt = DateTime.UtcNow;
+                _context.Update(product);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
         }

@@ -36,13 +36,13 @@ The deployment includes 4 services:
 | Service | Port | Description |
 |---------|------|-------------|
 | postgres | 5432 | PostgreSQL database |
-| web-mvc | 5000 | ASP.NET MVC application |
+| web-mvc | 5100 | ASP.NET MVC application |
 | web-api | 5001 | ASP.NET Web API |
 | client | 3000 | Next.js frontend |
 
 ## Accessing the Applications
 
-- **Web MVC**: http://localhost:5000
+- **Web MVC**: http://localhost:5100
 - **Web API**: http://localhost:5001
 - **Client**: http://localhost:3000
 

@@ -1,3 +1,4 @@
+using AutoMapper;
 using Firmeza.Application.DTOs;
 using Firmeza.Application.Interfaces;
 using Firmeza.Domain.Entities;
@@ -17,24 +18,30 @@ public class SalesController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly IPdfService _pdfService;
     private readonly IWebHostEnvironment _webHostEnvironment;
+    private readonly IMapper _mapper;
+    private readonly IEmailService _emailService;
 
     public SalesController(
         ApplicationDbContext context,
         IPdfService pdfService,
-        IWebHostEnvironment webHostEnvironment)
+        IWebHostEnvironment webHostEnvironment,
+        IMapper mapper,
+        IEmailService emailService)
     {
         _context = context;
         _pdfService = pdfService;
         _webHostEnvironment = webHostEnvironment;
+        _mapper = mapper;
+        _emailService = emailService;
     }
 
     /// <summary>
     /// Create a new sale (purchase from customer)
     /// </summary>
     [HttpPost]
-    public async Task<ActionResult<SaleResponseDto>> CreateSale([FromBody] CreateSaleDto request)
+    public async Task<ActionResult<SaleDto>> CreateSale([FromBody] CreateSaleDto request)
     {
-        if (!request.Items.Any())
+        if (!request.Details.Any())
             return BadRequest(new { message = "Debe agregar al menos un producto" });
 
         using var transaction = await _context.Database.BeginTransactionAsync();
@@ -52,14 +59,15 @@ public class SalesController : ControllerBase
                 SaleDate = DateTime.UtcNow,
                 CustomerId = request.CustomerId,
                 Customer = customer,
-                Status = SaleStatus.Completed
+                Status = SaleStatus.Completed,
+                Observations = request.Observations
             };
 
             decimal subtotal = 0;
             var saleDetails = new List<SaleDetail>();
 
             // Process Items
-            foreach (var item in request.Items)
+            foreach (var item in request.Details)
             {
                 var product = await _context.Products.FindAsync(item.ProductId);
                 if (product == null)
@@ -108,17 +116,24 @@ public class SalesController : ControllerBase
 
             await transaction.CommitAsync();
 
-            return Ok(new SaleResponseDto
+            // Send purchase confirmation email with PDF attachment
+            try
             {
-                Id = sale.Id,
-                SaleNumber = sale.SaleNumber,
-                SaleDate = sale.SaleDate,
-                Subtotal = sale.Subtotal,
-                Tax = sale.Tax,
-                Total = sale.Total,
-                Status = sale.Status.ToString(),
-                PdfPath = sale.PdfPath
-            });
+                await _emailService.SendPurchaseConfirmationAsync(
+                    customer.Email, 
+                    customer.FullName, 
+                    sale.SaleNumber, 
+                    sale.Total,
+                    pdfBytes); // Attach the PDF
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't fail the sale
+                // Email sending is not critical for sale success
+            }
+
+            var saleDto = _mapper.Map<SaleDto>(sale);
+            return Ok(saleDto);
         }
         catch (Exception ex)
         {
@@ -131,7 +146,7 @@ public class SalesController : ControllerBase
     /// Get customer's sales history
     /// </summary>
     [HttpGet("my-sales")]
-    public async Task<ActionResult<IEnumerable<SaleResponseDto>>> GetMySales()
+    public async Task<ActionResult<IEnumerable<SaleDto>>> GetMySales()
     {
         var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
         if (string.IsNullOrEmpty(userEmail))
@@ -142,21 +157,14 @@ public class SalesController : ControllerBase
             return NotFound(new { message = "Cliente no encontrado" });
 
         var sales = await _context.Sales
+            .Include(s => s.Customer)
+            .Include(s => s.SaleDetails)
+            .ThenInclude(sd => sd.Product)
             .Where(s => s.CustomerId == customer.Id)
             .OrderByDescending(s => s.SaleDate)
-            .Select(s => new SaleResponseDto
-            {
-                Id = s.Id,
-                SaleNumber = s.SaleNumber,
-                SaleDate = s.SaleDate,
-                Subtotal = s.Subtotal,
-                Tax = s.Tax,
-                Total = s.Total,
-                Status = s.Status.ToString(),
-                PdfPath = s.PdfPath
-            })
             .ToListAsync();
 
-        return Ok(sales);
+        var salesDto = _mapper.Map<IEnumerable<SaleDto>>(sales);
+        return Ok(salesDto);
     }
 }

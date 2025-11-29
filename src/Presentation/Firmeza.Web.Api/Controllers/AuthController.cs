@@ -17,17 +17,20 @@ public class AuthController : ControllerBase
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly ITokenService _tokenService;
     private readonly ApplicationDbContext _context;
+    private readonly IEmailService _emailService;
 
     public AuthController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         ITokenService tokenService,
-        ApplicationDbContext context)
+        ApplicationDbContext context,
+        IEmailService emailService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _tokenService = tokenService;
         _context = context;
+        _emailService = emailService;
     }
 
     [HttpPost("login")]
@@ -41,6 +44,14 @@ public class AuthController : ControllerBase
         if (!result.Succeeded)
             return Unauthorized(new { message = "Credenciales inválidas" });
 
+        // Check if user has a customer account and if it's active
+        if (user.CustomerId.HasValue)
+        {
+            var customer = await _context.Customers.FindAsync(user.CustomerId.Value);
+            if (customer == null || !customer.IsActive)
+                return Unauthorized(new { message = "Cuenta inactiva. Contacte al administrador." });
+        }
+
         var roles = await _userManager.GetRolesAsync(user);
         var token = _tokenService.GenerateToken(user.Id, user.Email!, user.FirstName ?? "", user.LastName ?? "", roles);
 
@@ -50,6 +61,7 @@ public class AuthController : ControllerBase
             Email = user.Email!,
             FirstName = user.FirstName ?? "",
             LastName = user.LastName ?? "",
+            CustomerId = user.CustomerId,
             Roles = roles.ToList()
         });
     }
@@ -105,6 +117,17 @@ public class AuthController : ControllerBase
         user.CustomerId = customer.Id;
         await _userManager.UpdateAsync(user);
 
+        // Send welcome email
+        try
+        {
+            await _emailService.SendWelcomeEmailAsync(user.Email!, customer.FullName);
+        }
+        catch (Exception ex)
+        {
+            // Log error but don't fail registration
+            // Email sending is not critical for registration success
+        }
+
         var roles = await _userManager.GetRolesAsync(user);
         var token = _tokenService.GenerateToken(user.Id, user.Email!, user.FirstName ?? "", user.LastName ?? "", roles);
 
@@ -114,6 +137,7 @@ public class AuthController : ControllerBase
             Email = user.Email!,
             FirstName = user.FirstName ?? "",
             LastName = user.LastName ?? "",
+            CustomerId = customer.Id,
             Roles = roles.ToList()
         });
     }

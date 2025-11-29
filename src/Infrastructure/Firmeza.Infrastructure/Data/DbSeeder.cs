@@ -24,6 +24,9 @@ public class DbSeeder
 
     public async Task SeedAsync()
     {
+        // 0. Apply migrations
+        await _context.Database.MigrateAsync();
+
         // 1. Seed Roles
         await SeedRolesAsync();
 
@@ -64,7 +67,7 @@ public class DbSeeder
                 CreatedAt = DateTime.UtcNow
             };
 
-            var result = await _userManager.CreateAsync(adminUser, "Admin123*");
+            var result = await _userManager.CreateAsync(adminUser, "Admin123!");
 
             if (result.Succeeded)
             {

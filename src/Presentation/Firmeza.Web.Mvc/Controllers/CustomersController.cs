@@ -1,6 +1,8 @@
 using Firmeza.Domain.Entities;
 using Firmeza.Infrastructure.Data;
+using Firmeza.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,10 +12,12 @@ namespace Firmeza.Web.Mvc.Controllers;
 public class CustomersController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public CustomersController(ApplicationDbContext context)
+    public CustomersController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
     {
         _context = context;
+        _userManager = userManager;
     }
 
     // GET: Customers
@@ -158,16 +162,39 @@ public class CustomersController : Controller
             var hasSales = await _context.Sales.AnyAsync(s => s.CustomerId == id);
             if (hasSales)
             {
-                // Soft delete instead
+                // Soft delete: Mark customer as inactive
                 customer.IsActive = false;
                 customer.UpdatedAt = DateTime.UtcNow;
                 _context.Update(customer);
                 await _context.SaveChangesAsync();
+                
+                // Also lock the associated Identity user account
+                if (!string.IsNullOrEmpty(customer.UserId))
+                {
+                    var user = await _userManager.FindByIdAsync(customer.UserId);
+                    if (user != null)
+                    {
+                        await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
+                        await _userManager.SetLockoutEnabledAsync(user, true);
+                    }
+                }
+                
                 return RedirectToAction(nameof(Index));
             }
 
+            // Delete customer
             _context.Customers.Remove(customer);
             await _context.SaveChangesAsync();
+            
+            // Also delete associated Identity user if exists
+            if (!string.IsNullOrEmpty(customer.UserId))
+            {
+                var user = await _userManager.FindByIdAsync(customer.UserId);
+                if (user != null)
+                {
+                    await _userManager.DeleteAsync(user);
+                }
+            }
         }
         return RedirectToAction(nameof(Index));
     }
