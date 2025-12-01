@@ -26,7 +26,8 @@ export default function LoginPage() {
             : formData
 
         try {
-            const res = await fetch(`http://localhost:5242${endpoint}`, {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5242'
+            const res = await fetch(`${apiUrl}${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)

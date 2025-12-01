@@ -33,6 +33,8 @@ services:
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB:-FirmezaDB};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-Qwe.123*}
     ports:
       - "5100:5000"
+    volumes:
+      - pdf_receipts:/app/wwwroot/recibos
     depends_on:
       postgres:
         condition: service_healthy
@@ -55,6 +57,8 @@ services:
       - JwtSettings__DurationInMinutes=60
     ports:
       - "5242:5001"
+    volumes:
+      - pdf_receipts:/app/wwwroot/recibos
     depends_on:
       postgres:
         condition: service_healthy
@@ -70,7 +74,7 @@ services:
     container_name: firmeza-client
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://web-api:5001
+      - NEXT_PUBLIC_API_URL=http://localhost:5242
     ports:
       - "3001:3000"
     depends_on:
@@ -85,3 +89,4 @@ networks:
 
 volumes:
   postgres_data:
+  pdf_receipts:

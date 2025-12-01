@@ -155,7 +155,8 @@ public class SalesController : Controller
         var sale = await _context.Sales.FindAsync(id);
         if (sale == null || string.IsNullOrEmpty(sale.PdfPath)) return NotFound();
 
-        var filePath = Path.Combine(_webHostEnvironment.WebRootPath, sale.PdfPath.TrimStart('/'));
+        var webRootPath = _webHostEnvironment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+        var filePath = Path.Combine(webRootPath, sale.PdfPath.TrimStart('/'));
         if (!System.IO.File.Exists(filePath)) return NotFound();
 
         var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);

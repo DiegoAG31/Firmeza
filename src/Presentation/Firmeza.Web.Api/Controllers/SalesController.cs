@@ -105,7 +105,10 @@ public class SalesController : ControllerBase
             // Generate PDF
             var pdfBytes = _pdfService.GenerateSaleReceipt(sale);
             var pdfFileName = $"Recibo_{sale.SaleNumber}.pdf";
-            var pdfPath = Path.Combine(_webHostEnvironment.WebRootPath, "recibos", pdfFileName);
+            
+            // Use WebRootPath or fallback to /app/wwwroot for Docker
+            var webRootPath = _webHostEnvironment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            var pdfPath = Path.Combine(webRootPath, "recibos", pdfFileName);
 
             Directory.CreateDirectory(Path.GetDirectoryName(pdfPath)!);
             await System.IO.File.WriteAllBytesAsync(pdfPath, pdfBytes);
