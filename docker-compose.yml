@@ -1,11 +1,10 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
     container_name: firmeza-postgres
-    network_mode: host
+    ports:
+      - "5433:5432"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-FirmezaDB}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -25,11 +24,11 @@ services:
       context: .
       dockerfile: src/Presentation/Firmeza.Web.Mvc/Dockerfile
     container_name: firmeza-web-mvc
-    network_mode: host
+    ports:
+      - "5100:5100"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      # Usamos localhost porque estamos en network_mode: host
-      - ConnectionStrings__DefaultConnection=Host=localhost;Port=5432;Database=${POSTGRES_DB:-FirmezaDB};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-Qwe.123*}
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB:-FirmezaDB};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-Qwe.123*}
       - ASPNETCORE_URLS=http://+:5100
     volumes:
       - pdf_receipts:/app/wwwroot/recibos
@@ -44,11 +43,11 @@ services:
       context: .
       dockerfile: src/Presentation/Firmeza.Web.Api/Dockerfile
     container_name: firmeza-web-api
-    network_mode: host
+    ports:
+      - "5242:5242"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      # Usamos localhost porque estamos en network_mode: host
-      - ConnectionStrings__DefaultConnection=Host=localhost;Port=5432;Database=${POSTGRES_DB:-FirmezaDB};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-Qwe.123*}
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB:-FirmezaDB};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-Qwe.123*}
       - JwtSettings__SecretKey=${JWT_SECRET_KEY:-Firmeza_Secret_Key_For_Development_Only_Change_In_Prod_12345!}
       - JwtSettings__Issuer=FirmezaApi
       - JwtSettings__Audience=FirmezaClient
@@ -67,11 +66,12 @@ services:
       context: .
       dockerfile: client/Dockerfile
     container_name: firmeza-client
-    network_mode: host
+    ports:
+      - "3001:3001"
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=http://localhost:5242
-      - API_URL=http://localhost:5242
+      - API_URL=http://web-api:5242
       - PORT=3001
     depends_on:
       - web-api
