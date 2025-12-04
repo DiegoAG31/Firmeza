@@ -114,13 +114,12 @@ builder.Services.AddScoped<Firmeza.Application.Interfaces.IEmailService, Firmeza
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Configure the HTTP request pipeline.
+// Enable Swagger in all environments for testing purposes
+app.UseSwagger();
+app.UseSwaggerUI();
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection(); // Disabled for Docker/HTTP environment
 
 app.UseStaticFiles(); // Enable serving static files from wwwroot
 
